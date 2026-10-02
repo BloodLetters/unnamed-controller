@@ -1,0 +1,35 @@
+//! Hardware component models and simulation behavior.
+
+pub mod buzzer;
+pub mod dht22;
+pub mod lcd1602;
+pub mod led;
+pub mod mq135;
+pub mod servo;
+pub mod ssd1306;
+
+pub use buzzer::{
+    BUZZER_MAX_OPERATING_VOLTAGE, BUZZER_MIN_OPERATING_VOLTAGE, BUZZER_TYPICAL_CURRENT_MA,
+    BUZZER_TYPICAL_FREQUENCY_HZ, Buzzer,
+};
+pub use dht22::{
+    DHT22_DEFAULT_HUMIDITY, DHT22_DEFAULT_TEMPERATURE, DHT22_MAX_HUMIDITY,
+    DHT22_MAX_OPERATING_VOLTAGE, DHT22_MAX_TEMPERATURE, DHT22_MIN_HUMIDITY,
+    DHT22_MIN_OPERATING_VOLTAGE, DHT22_MIN_TEMPERATURE, Dht22, Dht22ProtocolState,
+    encode_dht22_frame,
+};
+pub use lcd1602::{
+    LCD1602_COLS, LCD1602_DEFAULT_ADDRESS, LCD1602_ROWS, Lcd1602, LcdBacklightColor,
+};
+pub use led::{Led, LedColor};
+pub use mq135::{
+    MQ135_DEFAULT_PPM, MQ135_DEFAULT_THRESHOLD_PPM, MQ135_MAX_OPERATING_VOLTAGE, MQ135_MAX_PPM,
+    MQ135_MIN_OPERATING_VOLTAGE, MQ135_MIN_PPM, Mq135,
+};
+pub use servo::{
+    SERVO_DEFAULT_SPEED_DPS, SERVO_MAX_PULSE_US, SERVO_MIN_OPERATING_VOLTAGE, SERVO_MIN_PULSE_US,
+    Servo, pulse_width_to_angle,
+};
+pub use ssd1306::{
+    AddressingMode, SSD1306_DEFAULT_ADDRESS, SSD1306_HEIGHT, SSD1306_PAGES, SSD1306_WIDTH, Ssd1306,
+};

@@ -1,0 +1,18 @@
+[package]
+name = "avr-emulator"
+version = "0.1.2"
+edition = "2021"
+description = "A profile-driven, embeddable AVR CPU emulator"
+license = "BSD-3-Clause"
+repository = "https://github.com/isaiahpettingill/avr-emulator"
+readme = "README.md"
+keywords = ["avr", "emulator", "embedded", "no-std"]
+categories = ["embedded", "emulators", "no-std"]
+
+[features]
+default = []
+std = []
+
+[lib]
+name = "avr_emulator"
+path = "src/lib.rs"

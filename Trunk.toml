@@ -1,0 +1,7 @@
+[build]
+target = "crates/app-web/index.html"
+dist = "crates/app-web/dist"
+
+[serve]
+address = "127.0.0.1"
+port = 8080

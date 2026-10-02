@@ -1,0 +1,22 @@
+/// Virtual instruction opcodes supported across simulated MCUs.
+pub const OP_NOP: u8 = 0x00;
+pub const OP_SET_HIGH: u8 = 0x01;
+pub const OP_SET_LOW: u8 = 0x02;
+pub const OP_DELAY: u8 = 0x03;
+pub const OP_JUMP: u8 = 0x04;
+pub const OP_UART_SEND: u8 = 0x05;
+pub const OP_ENABLE_INTERRUPTS: u8 = 0x06;
+pub const OP_DISABLE_INTERRUPTS: u8 = 0x07;
+pub const OP_RETI: u8 = 0x08;
+pub const OP_ATTACH_INTERRUPT: u8 = 0x09;
+pub const OP_RESET_WATCHDOG: u8 = 0x0A;
+pub const OP_CONFIG_TIMER: u8 = 0x0B;
+pub const OP_LEDC_WRITE: u8 = 0x0C;
+pub const OP_WIFI_CONNECT: u8 = 0x0D;
+pub const OP_HALT: u8 = 0x0E;
+pub const OP_DAC_WRITE: u8 = 0x0F;
+pub const OP_TONE: u8 = 0x10;
+pub const OP_I2C_WRITE: u8 = 0x11;
+pub const OP_READ_PIN: u8 = 0x12;
+pub const OP_JUMP_IF: u8 = 0x13;
+pub const OP_JUMP_IF_NOT: u8 = 0x14;

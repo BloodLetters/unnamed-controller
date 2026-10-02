@@ -1,0 +1,13 @@
+[package]
+name = "sim-components"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+avr-emulator = { path = "../../vendor/avr-emulator" }
+serde = { version = "1.0.229", features = ["derive"] }
+sim-core = { path = "../sim-core" }
+
+# Real ESP32-S3 (Xtensa LX7) instruction-level emulator. Pinned to a commit; source is MIT.
+esp-soc = { git = "https://github.com/joakimeriksson/esp32sim", rev = "4ab7e900fee998d0137c2c57d59de9d05339d093" }
+s3emu = { package = "esp32s3", git = "https://github.com/joakimeriksson/esp32sim", rev = "4ab7e900fee998d0137c2c57d59de9d05339d093" }
