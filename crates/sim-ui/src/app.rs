@@ -3,7 +3,6 @@ use sim_core::engine::Engine;
 use sim_core::netlist::PinId;
 
 use crate::history::HistoryStack;
-use crate::inspector::render_inspector;
 use crate::types::{ProjectData, SelectedItem, SpawningComponent, ViewMode, Wire};
 use crate::view::render_central_canvas;
 
@@ -15,6 +14,8 @@ pub struct SimulatorApp {
     pub components: Vec<crate::component::PlacedComponent>,
 
     pub drawing_wire: Option<PinId>,
+    pub wire_waypoints: Vec<Pos2>,
+    pub canvas_rect: egui::Rect,
     pub dragging_item: bool,
     pub engine: Engine,
     pub power_on: bool,
@@ -57,6 +58,8 @@ impl Default for SimulatorApp {
             esp32_s3_rotations: vec![],
             components: vec![],
             drawing_wire: None,
+            wire_waypoints: vec![],
+            canvas_rect: egui::Rect::from_min_size(Pos2::ZERO, Vec2::new(800.0, 600.0)),
 
             dragging_item: false,
             engine,
@@ -126,6 +129,11 @@ impl SimulatorApp {
             (screen_pos.x - origin.x - self.pan.x) / self.zoom,
             (screen_pos.y - origin.y - self.pan.y) / self.zoom,
         )
+    }
+
+    /// Returns the canvas coordinate at the center of the current canvas camera viewport.
+    pub fn camera_center(&self) -> Pos2 {
+        self.to_canvas(self.canvas_rect.center(), self.canvas_rect.min)
     }
 
     /// Queries the canvas coordinate of a specific pin terminal.
@@ -250,7 +258,7 @@ impl eframe::App for SimulatorApp {
                     .show(ctx, |ui| {
                         crate::editor::view::render_editor_content(ui, self);
                     });
-                render_optional_inspector(ctx, self);
+                crate::inspector::render_optional_inspector(ctx, self);
                 render_central_canvas(ctx, self);
             }
             ViewMode::Code => {
@@ -259,7 +267,7 @@ impl eframe::App for SimulatorApp {
                 });
             }
             ViewMode::Circuit => {
-                render_optional_inspector(ctx, self);
+                crate::inspector::render_optional_inspector(ctx, self);
                 render_central_canvas(ctx, self);
             }
         }
@@ -275,18 +283,5 @@ impl eframe::App for SimulatorApp {
         if self.power_on {
             ctx.request_repaint();
         }
-    }
-}
-
-/// Renders the property inspector panel on the right side if a selection is active.
-fn render_optional_inspector(ctx: &egui::Context, app: &mut SimulatorApp) {
-    if !app.selected.is_none() {
-        egui::SidePanel::right("inspector_panel")
-            .resizable(true)
-            .default_width(260.0)
-            .min_width(200.0)
-            .show(ctx, |ui| {
-                render_inspector(ui, app);
-            });
     }
 }

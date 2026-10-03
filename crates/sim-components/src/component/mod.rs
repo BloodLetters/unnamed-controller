@@ -1,13 +1,16 @@
 //! Hardware component models and simulation behavior.
 
+pub mod button;
 pub mod buzzer;
 pub mod dht22;
 pub mod lcd1602;
 pub mod led;
 pub mod mq135;
+pub mod resistor;
 pub mod servo;
 pub mod ssd1306;
 
+pub use button::{Button, ButtonColor};
 pub use buzzer::{
     BUZZER_MAX_OPERATING_VOLTAGE, BUZZER_MIN_OPERATING_VOLTAGE, BUZZER_TYPICAL_CURRENT_MA,
     BUZZER_TYPICAL_FREQUENCY_HZ, Buzzer,
@@ -25,6 +28,9 @@ pub use led::{Led, LedColor};
 pub use mq135::{
     MQ135_DEFAULT_PPM, MQ135_DEFAULT_THRESHOLD_PPM, MQ135_MAX_OPERATING_VOLTAGE, MQ135_MAX_PPM,
     MQ135_MIN_OPERATING_VOLTAGE, MQ135_MIN_PPM, Mq135,
+};
+pub use resistor::{
+    RESISTOR_DEFAULT_OHMS, RESISTOR_MAX_OHMS, RESISTOR_MIN_OHMS, Resistor, clamp_resistance,
 };
 pub use servo::{
     SERVO_DEFAULT_SPEED_DPS, SERVO_MAX_PULSE_US, SERVO_MIN_OPERATING_VOLTAGE, SERVO_MIN_PULSE_US,

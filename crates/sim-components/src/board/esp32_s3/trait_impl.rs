@@ -6,7 +6,18 @@ use sim_core::pins::{DigitalState, PinDrive};
 
 use super::board::Esp32S3DevKit;
 use crate::board::traits::Board;
-use crate::board::types::{BoardDimensions, BoardType, FirmwareError, HeaderPin};
+use crate::board::types::{
+    BoardDimensions, BoardType, FirmwareError, HeaderPin, RAIL_VOLTAGE_3V3, RAIL_VOLTAGE_5V,
+};
+
+/// Resolves the potential of a named supply rail terminal from its silkscreen label.
+fn rail_voltage_for_name(name: &str) -> f32 {
+    match name {
+        "5V" => RAIL_VOLTAGE_5V,
+        "3V3" => RAIL_VOLTAGE_3V3,
+        _ => RAIL_VOLTAGE_3V3,
+    }
+}
 
 impl Board for Esp32S3DevKit {
     fn name(&self) -> &str {
@@ -167,6 +178,24 @@ impl Board for Esp32S3DevKit {
         }
 
         PinDrive::HighZ
+    }
+
+    fn rail_voltage(&self, pin: PinId) -> Option<f32> {
+        if !self.is_powered {
+            return None;
+        }
+
+        let header_pin = self.header_pins.iter().find(|p| p.pin_id == pin)?;
+
+        if header_pin.is_ground {
+            return Some(0.0);
+        }
+
+        if header_pin.is_power {
+            return Some(rail_voltage_for_name(&header_pin.name));
+        }
+
+        None
     }
 
     fn notify_pin_change(&mut self, pin: PinId, state: DigitalState) {

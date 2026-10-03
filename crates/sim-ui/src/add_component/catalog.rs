@@ -12,7 +12,7 @@ pub fn get_catalog() -> &'static [ComponentItem] {
 }
 
 /// Static catalog array containing all currently implemented components.
-const CATALOG_ITEMS: [ComponentItem; 13] = [
+const CATALOG_ITEMS: [ComponentItem; 15] = [
     ComponentItem {
         id: "esp32_s3_devkit",
         name: "ESP32-S3 DevKit",
@@ -142,5 +142,25 @@ const CATALOG_ITEMS: [ComponentItem; 13] = [
         is_pro: false,
         is_ready: true,
         spawn: SpawningComponent::BUZZER,
+    },
+    ComponentItem {
+        id: "resistor_220",
+        name: "Resistor (220 \u{3a9})",
+        category: CategoryKind::Passive,
+        specs: "Axial through-hole passive, 1/4W. Feeds the nodal solver for real voltage dividers",
+        badge: Some("Ready"),
+        is_pro: false,
+        is_ready: true,
+        spawn: SpawningComponent::RESISTOR,
+    },
+    ComponentItem {
+        id: "push_button",
+        name: "Push Button (Tactile)",
+        category: CategoryKind::Input,
+        specs: "6x6mm 4-pin SPST tactile pushbutton switch with dual bridged terminals",
+        badge: Some("Ready"),
+        is_pro: false,
+        is_ready: true,
+        spawn: SpawningComponent::BUTTON,
     },
 ];

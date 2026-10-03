@@ -155,6 +155,54 @@ fn draw_card_preview(ui: &Ui, rect: Rect, item: &ComponentItem) {
             FontId::monospace(6.5),
             Color32::from_rgb(0, 229, 255),
         );
+    } else if item.id.starts_with("push_button") {
+        let body_rect = Rect::from_center_size(center, Vec2::splat(22.0));
+        let lead_stroke = Stroke::new(1.2_f32, Color32::from_rgb(170, 175, 185));
+        painter.line_segment(
+            [
+                center + Vec2::new(-16.0, -5.0),
+                center + Vec2::new(-11.0, -5.0),
+            ],
+            lead_stroke,
+        );
+        painter.line_segment(
+            [
+                center + Vec2::new(11.0, -5.0),
+                center + Vec2::new(16.0, -5.0),
+            ],
+            lead_stroke,
+        );
+        painter.line_segment(
+            [
+                center + Vec2::new(-16.0, 5.0),
+                center + Vec2::new(-11.0, 5.0),
+            ],
+            lead_stroke,
+        );
+        painter.line_segment(
+            [center + Vec2::new(11.0, 5.0), center + Vec2::new(16.0, 5.0)],
+            lead_stroke,
+        );
+        painter.rect_filled(body_rect, 2.0, Color32::from_rgb(32, 35, 42));
+        painter.rect_stroke(
+            body_rect,
+            2.0,
+            Stroke::new(1.0_f32, Color32::from_rgb(55, 60, 72)),
+        );
+        for (rx, ry) in [(-7.5, -7.5), (7.5, -7.5), (-7.5, 7.5), (7.5, 7.5)] {
+            painter.circle_filled(
+                center + Vec2::new(rx, ry),
+                1.0,
+                Color32::from_rgb(140, 148, 160),
+            );
+        }
+        painter.circle_filled(center, 7.5, Color32::from_rgb(22, 24, 28));
+        painter.circle_filled(center, 6.0, Color32::from_rgb(37, 99, 235));
+        painter.circle_filled(
+            center + Vec2::new(-1.5, -1.5),
+            1.8,
+            Color32::from_rgba_unmultiplied(96, 165, 250, 180),
+        );
     } else {
         painter.text(
             center,

@@ -56,6 +56,9 @@ pub trait Board {
     /// Returns the active output driver mode for a terminal.
     fn pin_drive(&self, pin: PinId) -> PinDrive;
 
+    /// Returns the fixed potential of a power rail terminal in volts, or None when the terminal is not a rail.
+    fn rail_voltage(&self, pin: PinId) -> Option<f32>;
+
     /// Notifies the board that an external netlist signal changed state.
     fn notify_pin_change(&mut self, pin: PinId, state: DigitalState);
 }

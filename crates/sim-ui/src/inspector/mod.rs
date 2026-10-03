@@ -1,11 +1,13 @@
 //! Property inspector and debug panels for schematic elements.
 
+pub mod button;
 pub mod buzzer;
 pub mod dht22;
 pub mod esp32_s3;
 pub mod lcd1602;
 pub mod led;
 pub mod mq135;
+pub mod resistor;
 pub mod servo;
 pub mod ssd1306;
 pub mod wire;
@@ -60,5 +62,18 @@ pub fn render_component_inspector(ui: &mut Ui, app: &mut SimulatorApp, index: us
         app.delete_selected();
     } else if rebuild_requested {
         app.rebuild_netlist();
+    }
+}
+
+/// Renders the property inspector panel on the right side if a selection is active.
+pub fn render_optional_inspector(ctx: &egui::Context, app: &mut SimulatorApp) {
+    if !app.selected.is_none() {
+        egui::SidePanel::right("inspector_panel")
+            .resizable(true)
+            .default_width(260.0)
+            .min_width(200.0)
+            .show(ctx, |ui| {
+                render_inspector(ui, app);
+            });
     }
 }

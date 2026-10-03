@@ -1,5 +1,14 @@
 use egui::{Color32, FontId, Painter, Pos2, Rect, Stroke, Vec2};
 
+/// Constructs the screen-coordinate polyline for wire endpoints and intermediate waypoints.
+pub fn build_wire_path(start: Pos2, waypoints: &[Pos2], end: Pos2) -> Vec<Pos2> {
+    let mut path = Vec::with_capacity(waypoints.len() + 2);
+    path.push(start);
+    path.extend_from_slice(waypoints);
+    path.push(end);
+    path
+}
+
 /// Computes an orthogonal 90-degree routing path between two canvas coordinates.
 pub fn calculate_orthogonal_path(start: Pos2, end: Pos2) -> Vec<Pos2> {
     let dx = (end.x - start.x).abs();
@@ -134,5 +143,18 @@ mod tests {
         ];
         assert_eq!(distance_to_path(Pos2::new(25.0, 2.0), &path), 2.0);
         assert_eq!(distance_to_path(Pos2::new(52.0, 25.0), &path), 2.0);
+    }
+
+    #[test]
+    fn test_build_wire_path() {
+        let s = Pos2::new(0.0, 0.0);
+        let wp = vec![Pos2::new(20.0, 0.0), Pos2::new(20.0, 50.0)];
+        let e = Pos2::new(100.0, 50.0);
+        let path = build_wire_path(s, &wp, e);
+        assert_eq!(path.len(), 4);
+        assert_eq!(path[0], s);
+        assert_eq!(path[1], wp[0]);
+        assert_eq!(path[2], wp[1]);
+        assert_eq!(path[3], e);
     }
 }

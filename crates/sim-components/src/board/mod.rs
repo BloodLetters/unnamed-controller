@@ -6,4 +6,7 @@ pub mod types;
 
 pub use esp32_s3::Esp32S3DevKit;
 pub use traits::Board;
-pub use types::{BoardDimensions, BoardRgbLed, BoardType, FirmwareError, HeaderPin, HeaderSide};
+pub use types::{
+    BoardDimensions, BoardRgbLed, BoardType, FirmwareError, HeaderPin, HeaderSide,
+    RAIL_VOLTAGE_3V3, RAIL_VOLTAGE_5V,
+};

@@ -1,7 +1,9 @@
 //! Runtime instance variant and behavior delegation for placed components.
 
-use egui::{Painter, Pos2, Ui, Vec2};
-use sim_components::component::{Buzzer, Dht22, Lcd1602, Led, Mq135, Servo, Ssd1306};
+use egui::{Ui, Vec2};
+use sim_components::component::{
+    Button, Buzzer, Dht22, Lcd1602, Led, Mq135, Resistor, Servo, Ssd1306,
+};
 use sim_core::component::Component;
 use sim_core::engine::Engine;
 use sim_core::netlist::PinId;
@@ -16,6 +18,8 @@ pub enum ComponentInstance {
     Dht22(Dht22),
     Mq135(Mq135),
     Buzzer(Buzzer),
+    Resistor(Resistor),
+    Button(Button),
 }
 
 impl ComponentInstance {
@@ -29,6 +33,8 @@ impl ComponentInstance {
             Self::Dht22(_) => "DHT22 / AM2302 Sensor",
             Self::Mq135(_) => "MQ-135 Gas Sensor",
             Self::Buzzer(_) => "Active Buzzer",
+            Self::Resistor(_) => "Resistor",
+            Self::Button(_) => "Push Button (Tactile)",
         }
     }
 
@@ -42,71 +48,8 @@ impl ComponentInstance {
             Self::Dht22(c) => c.pins(),
             Self::Mq135(c) => c.pins(),
             Self::Buzzer(c) => c.pins(),
-        }
-    }
-
-    /// Relative offsets (dx, dy) of each terminal pin from component center.
-    pub fn pin_offsets(&self) -> Vec<(PinId, Vec2)> {
-        match self {
-            Self::Led(c) => {
-                let ox = crate::canvas::components::led::LED_PIN_OFFSET_X;
-                let oy = crate::canvas::components::led::LED_PIN_OFFSET_Y;
-                vec![
-                    (c.anode(), Vec2::new(-ox, oy)),
-                    (c.cathode(), Vec2::new(ox, oy)),
-                ]
-            }
-            Self::Ssd1306(c) => {
-                let offsets = crate::canvas::components::ssd1306::ssd1306_pin_offsets();
-                vec![
-                    (c.gnd(), Vec2::new(offsets[0].0, offsets[0].1)),
-                    (c.vcc(), Vec2::new(offsets[1].0, offsets[1].1)),
-                    (c.sda(), Vec2::new(offsets[2].0, offsets[2].1)),
-                    (c.scl(), Vec2::new(offsets[3].0, offsets[3].1)),
-                ]
-            }
-            Self::Lcd1602(c) => {
-                let offsets = crate::canvas::components::lcd1602::lcd1602_pin_offsets();
-                vec![
-                    (c.gnd(), Vec2::new(offsets[0].0, offsets[0].1)),
-                    (c.vcc(), Vec2::new(offsets[1].0, offsets[1].1)),
-                    (c.sda(), Vec2::new(offsets[2].0, offsets[2].1)),
-                    (c.scl(), Vec2::new(offsets[3].0, offsets[3].1)),
-                ]
-            }
-            Self::Servo(c) => {
-                let offsets = crate::canvas::components::servo::servo_pin_offsets();
-                vec![
-                    (c.gnd(), Vec2::new(offsets[0].0, offsets[0].1)),
-                    (c.vcc(), Vec2::new(offsets[1].0, offsets[1].1)),
-                    (c.pwm(), Vec2::new(offsets[2].0, offsets[2].1)),
-                ]
-            }
-            Self::Dht22(c) => {
-                let offsets = crate::canvas::components::dht22::dht22_pin_offsets();
-                vec![
-                    (c.vcc(), Vec2::new(offsets[0].0, offsets[0].1)),
-                    (c.data(), Vec2::new(offsets[1].0, offsets[1].1)),
-                    (c.nc(), Vec2::new(offsets[2].0, offsets[2].1)),
-                    (c.gnd(), Vec2::new(offsets[3].0, offsets[3].1)),
-                ]
-            }
-            Self::Mq135(c) => {
-                let offsets = crate::canvas::components::mq135::mq135_pin_offsets();
-                vec![
-                    (c.vcc(), Vec2::new(offsets[0].0, offsets[0].1)),
-                    (c.gnd(), Vec2::new(offsets[1].0, offsets[1].1)),
-                    (c.aout(), Vec2::new(offsets[2].0, offsets[2].1)),
-                    (c.dout(), Vec2::new(offsets[3].0, offsets[3].1)),
-                ]
-            }
-            Self::Buzzer(c) => {
-                let offsets = crate::canvas::components::buzzer::buzzer_pin_offsets();
-                vec![
-                    (c.vcc(), Vec2::new(offsets[0].0, offsets[0].1)),
-                    (c.gnd(), Vec2::new(offsets[1].0, offsets[1].1)),
-                ]
-            }
+            Self::Resistor(c) => c.pins(),
+            Self::Button(c) => c.pins(),
         }
     }
 
@@ -120,82 +63,8 @@ impl ComponentInstance {
             Self::Dht22(_) => Vec2::new(52.0, 78.0),
             Self::Mq135(_) => Vec2::new(56.0, 70.0),
             Self::Buzzer(_) => Vec2::new(40.0, 60.0),
-        }
-    }
-
-    /// Renders the component package, labels, terminals, and interactive feedback.
-    pub fn draw(&self, painter: &Painter, center: Pos2, zoom: f32, rot: u16, is_selected: bool) {
-        match self {
-            Self::Led(c) => {
-                crate::canvas::components::led::draw_single_led(
-                    painter,
-                    center,
-                    zoom,
-                    rot,
-                    c,
-                    is_selected,
-                );
-            }
-            Self::Ssd1306(c) => {
-                crate::canvas::components::ssd1306::draw_single_ssd1306(
-                    painter,
-                    center,
-                    zoom,
-                    rot,
-                    c,
-                    is_selected,
-                );
-            }
-            Self::Lcd1602(c) => {
-                crate::canvas::components::lcd1602::draw_single_lcd1602(
-                    painter,
-                    center,
-                    zoom,
-                    rot,
-                    c,
-                    is_selected,
-                );
-            }
-            Self::Servo(c) => {
-                crate::canvas::components::servo::draw_single_servo(
-                    painter,
-                    center,
-                    zoom,
-                    rot,
-                    c,
-                    is_selected,
-                );
-            }
-            Self::Dht22(c) => {
-                crate::canvas::components::dht22::draw_single_dht22(
-                    painter,
-                    center,
-                    zoom,
-                    rot,
-                    c,
-                    is_selected,
-                );
-            }
-            Self::Mq135(c) => {
-                crate::canvas::components::mq135::draw_single_mq135(
-                    painter,
-                    center,
-                    zoom,
-                    rot,
-                    c,
-                    is_selected,
-                );
-            }
-            Self::Buzzer(c) => {
-                crate::canvas::components::buzzer::draw_single_buzzer(
-                    painter,
-                    center,
-                    zoom,
-                    rot,
-                    c,
-                    is_selected,
-                );
-            }
+            Self::Resistor(_) => Vec2::new(52.0, 22.0),
+            Self::Button(_) => Vec2::new(48.0, 36.0),
         }
     }
 
@@ -232,6 +101,8 @@ impl ComponentInstance {
                 buzzer.update_electrical(v_vcc, v_gnd);
             }
             Self::Ssd1306(_) | Self::Lcd1602(_) => {}
+            Self::Resistor(_) => {}
+            Self::Button(_) => {}
         }
     }
 
@@ -295,6 +166,16 @@ impl ComponentInstance {
                     ui, buzzer, engine, on_delete,
                 );
             }
+            Self::Resistor(resistor) => {
+                crate::inspector::resistor::render_resistor_inspector_content(
+                    ui, resistor, engine, on_delete,
+                );
+            }
+            Self::Button(button) => {
+                crate::inspector::button::render_button_inspector_content(
+                    ui, button, engine, on_delete,
+                );
+            }
         }
     }
 
@@ -326,6 +207,10 @@ impl ComponentInstance {
                 crate::canvas::components::mq135::render_mq135_context_options(ui, sensor);
             }
             Self::Buzzer(_) => {}
+            Self::Resistor(_) => {}
+            Self::Button(button) => {
+                crate::canvas::components::button::render_button_context_options(ui, button);
+            }
         }
     }
 
@@ -353,6 +238,24 @@ impl ComponentInstance {
                 Self::Mq135(dup)
             }
             Self::Buzzer(_) => Self::Buzzer(Buzzer::new(next_pin(), next_pin())),
+            Self::Resistor(c) => Self::Resistor(Resistor::with_resistance(
+                next_pin(),
+                next_pin(),
+                c.resistance_ohms(),
+            )),
+            Self::Button(c) => {
+                let mut dup = Button::new(next_pin(), next_pin(), next_pin(), next_pin());
+                dup.set_color(c.color());
+                dup.set_latching(c.is_latching());
+                Self::Button(dup)
+            }
+        }
+    }
+
+    /// Handles primary user click actuation directly on the canvas.
+    pub fn on_canvas_click(&mut self) {
+        if let Self::Button(btn) = self {
+            btn.toggle();
         }
     }
 }

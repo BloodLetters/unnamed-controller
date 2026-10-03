@@ -13,6 +13,8 @@ pub enum CategoryKind {
     Displays,
     Output,
     Sensors,
+    Input,
+    Passive,
 }
 
 impl CategoryKind {
@@ -24,16 +26,20 @@ impl CategoryKind {
             Self::Displays => "Displays",
             Self::Output => "Output",
             Self::Sensors => "Sensors",
+            Self::Input => "Input",
+            Self::Passive => "Passive",
         }
     }
 
     /// All categories in standard sidebar display order.
-    pub const ALL: [Self; 5] = [
+    pub const ALL: [Self; 7] = [
         Self::All,
         Self::Boards,
         Self::Displays,
         Self::Output,
         Self::Sensors,
+        Self::Input,
+        Self::Passive,
     ];
 }
 

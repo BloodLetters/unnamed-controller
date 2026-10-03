@@ -25,6 +25,7 @@ pub fn render_central_canvas(ctx: &egui::Context, app: &mut SimulatorApp) {
         if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
             app.spawning = SpawningComponent::None;
             app.drawing_wire = None;
+            app.wire_waypoints.clear();
         }
         if ctx.input(|i| i.key_pressed(egui::Key::R) && !i.modifiers.command) {
             let delta = if ctx.input(|i| i.modifiers.shift) {
@@ -41,6 +42,7 @@ pub fn render_central_canvas(ctx: &egui::Context, app: &mut SimulatorApp) {
         let (response, painter) =
             ui.allocate_painter(ui.available_size(), egui::Sense::click_and_drag());
         let rect = response.rect;
+        app.canvas_rect = rect;
         let origin = rect.min;
 
         draw_grid(&painter, rect, app.pan, app.zoom);
@@ -77,36 +79,65 @@ pub fn render_central_canvas(ctx: &egui::Context, app: &mut SimulatorApp) {
         }
 
         if let Some(start_pin) = app.drawing_wire {
-            if let Some(start_pos) = app.get_pin_pos(start_pin) {
-                let s_screen = app.to_screen(start_pos, rect.min);
-                let end_screen = if let Some(target_pin) = hovered_pin.filter(|&p| p != start_pin) {
-                    app.get_pin_pos(target_pin)
-                        .map(|p| app.to_screen(p, rect.min))
-                        .unwrap_or_else(|| hover_pos.unwrap_or(s_screen))
-                } else {
-                    hover_pos.unwrap_or(s_screen)
-                };
-                let path = crate::wire::calculate_orthogonal_path(s_screen, end_screen);
-                crate::wire::render_wire_path(&painter, &path, Color32::YELLOW, true, "");
-            }
-
-            if response.drag_stopped_by(egui::PointerButton::Primary)
-                && let Some(end_pin) = hovered_pin.filter(|&ep| ep != start_pin)
+            if response.secondary_clicked()
+                || ui.input(|i| i.pointer.button_clicked(egui::PointerButton::Secondary))
             {
-                app.record_history();
-                app.wires.push(Wire::new(start_pin, end_pin));
-                app.rebuild_netlist();
                 app.drawing_wire = None;
-            }
+                app.wire_waypoints.clear();
+            } else {
+                if let Some(start_pos) = app.get_pin_pos(start_pin) {
+                    let s_screen = app.to_screen(start_pos, rect.min);
+                    let screen_waypoints: Vec<egui::Pos2> = app
+                        .wire_waypoints
+                        .iter()
+                        .map(|&p| app.to_screen(p, rect.min))
+                        .collect();
+                    let end_screen =
+                        if let Some(target_pin) = hovered_pin.filter(|&p| p != start_pin) {
+                            app.get_pin_pos(target_pin)
+                                .map(|p| app.to_screen(p, rect.min))
+                                .unwrap_or_else(|| hover_pos.unwrap_or(s_screen))
+                        } else {
+                            hover_pos.unwrap_or(s_screen)
+                        };
+                    let path =
+                        crate::wire::build_wire_path(s_screen, &screen_waypoints, end_screen);
+                    crate::wire::render_wire_path(&painter, &path, Color32::YELLOW, true, "");
+                    for wp in &screen_waypoints {
+                        painter.circle_filled(*wp, 3.5, Color32::YELLOW);
+                        painter.circle_stroke(
+                            *wp,
+                            3.5,
+                            Stroke::new(1.0_f32, Color32::from_rgb(20, 22, 28)),
+                        );
+                    }
+                }
 
-            if response.clicked_by(egui::PointerButton::Primary) {
-                if let Some(end_pin) = hovered_pin.filter(|&ep| ep != start_pin) {
+                if response.drag_stopped_by(egui::PointerButton::Primary)
+                    && let Some(end_pin) = hovered_pin.filter(|&ep| ep != start_pin)
+                {
                     app.record_history();
-                    app.wires.push(Wire::new(start_pin, end_pin));
+                    let waypoints = app.wire_waypoints.drain(..).map(|p| [p.x, p.y]).collect();
+                    app.wires
+                        .push(Wire::with_waypoints(start_pin, end_pin, waypoints));
                     app.rebuild_netlist();
                     app.drawing_wire = None;
-                } else if hovered_pin.is_none() {
-                    app.drawing_wire = None;
+                }
+
+                if response.clicked_by(egui::PointerButton::Primary) {
+                    if let Some(end_pin) = hovered_pin.filter(|&ep| ep != start_pin) {
+                        app.record_history();
+                        let waypoints = app.wire_waypoints.drain(..).map(|p| [p.x, p.y]).collect();
+                        app.wires
+                            .push(Wire::with_waypoints(start_pin, end_pin, waypoints));
+                        app.rebuild_netlist();
+                        app.drawing_wire = None;
+                    } else if hovered_pin.is_none()
+                        && let Some(click_pos) = response.interact_pointer_pos()
+                    {
+                        let canvas_pos = app.to_canvas(click_pos, rect.min);
+                        app.wire_waypoints.push(canvas_pos);
+                    }
                 }
             }
         } else if app.spawning == SpawningComponent::None {
@@ -118,7 +149,29 @@ pub fn render_central_canvas(ctx: &egui::Context, app: &mut SimulatorApp) {
             let drag_started = response.drag_started_by(egui::PointerButton::Primary);
             let shift_held = ui.input(|i| i.modifiers.shift);
 
-            if clicked || secondary_clicked {
+            if clicked {
+                if let Some(pin) = hovered_pin {
+                    app.drawing_wire = Some(pin);
+                    app.wire_waypoints.clear();
+                    app.selected = SelectedItem::None;
+                } else if let Some(pos) = pointer_canvas {
+                    if let Some(comp) = find_component_at(app, pos) {
+                        if !app.selected.contains_item(&comp) {
+                            app.selected = comp.clone();
+                        }
+                        if let SelectedItem::Component(idx) = comp
+                            && let Some(c) = app.components.get_mut(idx)
+                        {
+                            c.instance.on_canvas_click();
+                        }
+                    } else if let Some(click_pos) = response.interact_pointer_pos()
+                        && select_wire_at_pos(app, click_pos, origin)
+                    {
+                    } else {
+                        app.selected = SelectedItem::None;
+                    }
+                }
+            } else if secondary_clicked {
                 if let Some(pos) = pointer_canvas {
                     if let Some(comp) = find_component_at(app, pos) {
                         if !app.selected.contains_item(&comp) {
@@ -127,13 +180,13 @@ pub fn render_central_canvas(ctx: &egui::Context, app: &mut SimulatorApp) {
                     } else if let Some(click_pos) = response.interact_pointer_pos()
                         && select_wire_at_pos(app, click_pos, origin)
                     {
-                    } else if clicked {
-                        app.selected = SelectedItem::None;
                     }
                 }
             } else if drag_started {
                 if let Some(pin) = hovered_pin {
                     app.drawing_wire = Some(pin);
+                    app.wire_waypoints.clear();
+                    app.selected = SelectedItem::None;
                 } else if let Some(comp) = pointer_canvas.and_then(|p| find_component_at(app, p)) {
                     if !app.selected.contains_item(&comp) {
                         app.selected = comp;
@@ -201,9 +254,11 @@ pub fn render_central_canvas(ctx: &egui::Context, app: &mut SimulatorApp) {
         render_floating_zoom_control(ui, rect, app);
         render_spawning_banner(ui, rect, app);
 
-        response.context_menu(|ui| {
-            crate::canvas::context_menu::render_canvas_context_menu(ui, app);
-        });
+        if app.drawing_wire.is_none() {
+            response.context_menu(|ui| {
+                crate::canvas::context_menu::render_canvas_context_menu(ui, app);
+            });
+        }
     });
 }
 

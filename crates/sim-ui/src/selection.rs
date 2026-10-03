@@ -3,7 +3,7 @@ use egui::{Pos2, Rect};
 use crate::app::SimulatorApp;
 use crate::registry::CATALOG;
 use crate::types::SelectedItem;
-use crate::wire::{calculate_orthogonal_path, distance_to_path};
+use crate::wire::{build_wire_path, distance_to_path};
 
 /// Selects all components enclosed within the canvas selection bounding box.
 pub fn select_items_in_rect(app: &mut SimulatorApp, box_rect: Rect) {
@@ -36,7 +36,12 @@ pub fn select_wire_at_pos(app: &mut SimulatorApp, click_pos: Pos2, origin: Pos2)
         if let (Some(s), Some(e)) = (s_opt, e_opt) {
             let s_screen = app.to_screen(s, origin);
             let e_screen = app.to_screen(e, origin);
-            let path = calculate_orthogonal_path(s_screen, e_screen);
+            let waypoints: Vec<Pos2> = wire
+                .waypoints
+                .iter()
+                .map(|wp| app.to_screen(Pos2::new(wp[0], wp[1]), origin))
+                .collect();
+            let path = build_wire_path(s_screen, &waypoints, e_screen);
             if distance_to_path(click_pos, &path) <= 6.0_f32 {
                 app.selected = SelectedItem::Wire(i);
                 return true;

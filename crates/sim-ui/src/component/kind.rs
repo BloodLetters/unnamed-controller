@@ -1,6 +1,8 @@
 //! Factory metadata and specifications for instantiating component types.
 
-use sim_components::component::{Buzzer, Dht22, Lcd1602, Led, LedColor, Mq135, Servo, Ssd1306};
+use sim_components::component::{
+    Button, Buzzer, Dht22, Lcd1602, Led, LedColor, Mq135, Resistor, Servo, Ssd1306,
+};
 use sim_core::netlist::PinId;
 
 use crate::component::instance::ComponentInstance;
@@ -15,6 +17,8 @@ pub enum ComponentKind {
     Dht22,
     Mq135,
     Buzzer,
+    Resistor,
+    Button,
 }
 
 impl ComponentKind {
@@ -42,6 +46,13 @@ impl ComponentKind {
                 ComponentInstance::Mq135(Mq135::new(next_pin(), next_pin(), next_pin(), next_pin()))
             }
             Self::Buzzer => ComponentInstance::Buzzer(Buzzer::new(next_pin(), next_pin())),
+            Self::Resistor => ComponentInstance::Resistor(Resistor::new(next_pin(), next_pin())),
+            Self::Button => ComponentInstance::Button(Button::new(
+                next_pin(),
+                next_pin(),
+                next_pin(),
+                next_pin(),
+            )),
         }
     }
 

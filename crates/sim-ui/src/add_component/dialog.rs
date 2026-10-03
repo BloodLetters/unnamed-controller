@@ -1,6 +1,6 @@
 //! Fullscreen modal dialog for exploring and spawning components and boards.
 
-use egui::{Color32, Pos2, RichText, Ui, Vec2};
+use egui::{Color32, RichText, Ui, Vec2};
 
 use super::card::render_component_card;
 use super::catalog::get_catalog;
@@ -48,7 +48,7 @@ pub fn render_add_component_dialog(ctx: &egui::Context, app: &mut SimulatorApp) 
     }
 
     if let Some(spawn) = selected_to_spawn {
-        let spawn_pos = Pos2::new(-app.pan.x / app.zoom, -app.pan.y / app.zoom);
+        let spawn_pos = app.camera_center();
         app.record_history();
         app.spawning = spawn;
         app.spawn_component_at(spawn_pos);

@@ -102,58 +102,21 @@ When clicking the prominent `+ Add` button:
 
 ## 5. Step-by-Step Guide: How to Integrate a New Component in UI
 
-Follow this exact 5-step workflow when adding any new component to the UI:
+With the Unified Component Architecture, discrete components do not need separate storage vectors, separate hit-testing `Spec` entries in `registry.rs`, or custom branches in `state/spawn.rs`.
 
-### Step 1: Canvas Renderer (`src/canvas/components/<name>.rs`)
-- Create procedural drawing function `pub fn draw_<name>s(painter: &Painter, origin: Pos2, app: &SimulatorApp)`.
-- Use high-quality visual geometry:
-  - Base body geometry (solder pads, package outline, silk screen markings).
-  - Lead terminals and pins matching electrical coordinates from `sim-components`.
-  - Realistic state visualization (LED dome glow halos, active display pixels, switch state).
-  - Selection highlight border stroke when selected (`is_selected`).
+Follow the standard guide in [`skills/ADD_COMPONENT.md`](../../skills/ADD_COMPONENT.md):
 
-### Step 2: Property Inspector Panel (`src/inspector/<name>.rs`)
-- Create inspector renderer `pub fn render_<name>_inspector(ui: &mut Ui, app: &mut SimulatorApp, index: usize)`.
-- Display component title, subtitle, interactive controls (color picker, value slider, flip polarity).
-- Display real-time electrical telemetry (connected pin voltages, forward drop, logic levels).
-- Provide delete button (`app.delete_selected()`).
-- Expose in `src/inspector/mod.rs`.
-
-### Step 3: Add Component Catalog Registration (`src/add_component/`)
-- In `src/add_component/catalog.rs`: Add item to `CATALOG_ITEMS`:
-  ```rust
-  ComponentItem {
-      id: "<name>",
-      name: "<Human Name>",
-      category: CategoryKind::<Category>,
-      specs: "<Key Specifications & Ratings>",
-      badge: Some("Ready"),
-      is_pro: false,
-      is_ready: true,
-      spawn: SpawningComponent::<Variant>,
-  }
-  ```
-- In `src/add_component/card.rs`: Add thumbnail preview drawing in `draw_card_preview()`.
-
-### Step 4: Selection & Catalog Registry (`src/registry.rs`)
-- Add `Spec` entry in `CATALOG` slice:
-  - `make`: Builder for `SelectedItem::<Name>(index)`.
-  - `index`: Extractor for `SelectedItem::<Name>`.
-  - `count`: Instance count in `SimulatorApp`.
-  - `pos`: Canvas position accessor.
-  - `bounds`: Hit-testing box size (`Vec2`).
-  - `pins`: Pin IDs accessor.
-  - `remove`: Removal handler.
-  - `move_by`: Canvas displacement handler.
-
-### Step 5: Canvas Spawning Handler (`src/state/spawn.rs`)
-- In `spawn_component_at(app: &mut SimulatorApp, local_pos: Pos2)`:
-  - Allocate next deterministic pin IDs using `next_pin_id(app)`.
-  - Instantiate component from `sim-components`.
-  - Push `(local_pos, instance)` to app storage vector.
-  - Set `app.selected = SelectedItem::<Name>(new_index)`.
-  - Reset `app.spawning = SpawningComponent::None`.
-  - Call `app.rebuild_netlist()`.
+1. **Model Emulation** (`crates/sim-components/src/component/<name>.rs`): Define struct, pin IDs, and state machine.
+2. **Canvas Rendering** (`src/canvas/components/<name>.rs`): Implement `draw_single_<name>()` with package, labels, terminals, and rotation offsets.
+3. **Property Inspector** (`src/inspector/<name>.rs`): Implement `render_<name>_inspector_content()`, exposed in `src/inspector/mod.rs`.
+4. **Unified Component Registration** (`src/component/`):
+   - `src/component/instance.rs`: Add variant `ComponentInstance::<Name>(MyComponent)` and lifecycle delegation arms.
+   - `src/component/rendering.rs`: Implement `pin_offsets()` and `draw()` arms.
+   - `src/component/kind.rs`: Add variant `ComponentKind::<Name>` and factory instantiation in `ComponentKind::create()`.
+5. **Catalog & Spawning** (`src/add_component/`):
+   - `src/add_component/catalog.rs`: Add item in `CATALOG_ITEMS`.
+   - `src/add_component/card.rs`: *(Optional)* Add visual preview glyph in `draw_card_preview()`.
+   - Spawning automatically places the component at the user's current camera center (`app.camera_center()`).
 
 ---
 

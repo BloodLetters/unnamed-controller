@@ -26,6 +26,68 @@ pub fn get_pin_voltage(engine: &sim_core::engine::Engine, pin: PinId) -> f32 {
     }
 }
 
+/// Rebuilds the resistive network from board supply rails and passive components.
+///
+/// Runs every tick so that changing a resistance or rewiring takes effect without an
+/// explicit rebuild, and so the solver never retains branches from a deleted component.
+fn build_resistive_network(app: &mut SimulatorApp) {
+    app.engine.network.clear();
+
+    let rail_pins: Vec<(sim_core::netlist::PinId, f32)> = app
+        .esp32_s3_boards
+        .iter()
+        .flat_map(|(_, board)| {
+            board
+                .pins()
+                .into_iter()
+                .filter_map(|pin| board.rail_voltage(pin).map(|voltage| (pin, voltage)))
+        })
+        .collect();
+
+    for (pin, voltage) in rail_pins {
+        app.engine
+            .network
+            .claim_rail_pin(&app.engine.netlist, pin, voltage);
+    }
+
+    let netlist = &app.engine.netlist;
+    for comp in &app.components {
+        match &comp.instance {
+            crate::component::ComponentInstance::Resistor(resistor) => {
+                app.engine.network.add_resistor_pin(
+                    netlist,
+                    resistor.terminal_a(),
+                    resistor.terminal_b(),
+                    resistor.resistance_ohms(),
+                );
+            }
+            crate::component::ComponentInstance::Button(button) => {
+                app.engine.network.add_resistor_pin(
+                    netlist,
+                    button.pin_1a(),
+                    button.pin_1b(),
+                    0.001,
+                );
+                app.engine.network.add_resistor_pin(
+                    netlist,
+                    button.pin_2a(),
+                    button.pin_2b(),
+                    0.001,
+                );
+                if button.is_conductive() {
+                    app.engine.network.add_resistor_pin(
+                        netlist,
+                        button.pin_1a(),
+                        button.pin_2a(),
+                        0.001,
+                    );
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
 /// Evaluates all circuit states, simulation engine step, instrument sampling, and audio streaming.
 pub fn tick_simulation(app: &mut SimulatorApp) {
     if !app.power_on {
@@ -39,6 +101,10 @@ pub fn tick_simulation(app: &mut SimulatorApp) {
         }
     }
     app.engine.evaluate_netlist_drives(&drives);
+
+    build_resistive_network(app);
+
+    app.engine.solve_analog_network();
 
     let mut i2c_packets = Vec::new();
     for (_, board) in &mut app.esp32_s3_boards {

@@ -3,7 +3,7 @@
 use egui::{Color32, RichText, Ui};
 
 use crate::app::SimulatorApp;
-use crate::types::{SelectedItem, SpawningComponent};
+use crate::types::SelectedItem;
 
 /// Renders the right-click context menu for canvas components or empty workbench space.
 pub fn render_canvas_context_menu(ui: &mut Ui, app: &mut SimulatorApp) {
@@ -89,36 +89,9 @@ fn render_standard_actions(ui: &mut Ui, app: &mut SimulatorApp) {
     }
 }
 
-/// Renders quick spawn actions when right clicking on empty canvas space.
+/// Renders canvas utility actions when right clicking on empty canvas space.
 fn render_empty_canvas_menu(ui: &mut Ui, app: &mut SimulatorApp) {
     render_header(ui, "Circuit Workbench");
-
-    if ui.button("➕ Add ESP32-S3").clicked() {
-        app.spawning = SpawningComponent::Esp32S3;
-        ui.close_menu();
-    }
-    if ui.button("➕ Add LED").clicked() {
-        app.spawning = SpawningComponent::LED;
-        ui.close_menu();
-    }
-    if ui.button("➕ Add SSD1306 OLED").clicked() {
-        app.spawning = SpawningComponent::SSD1306;
-        ui.close_menu();
-    }
-    if ui.button("➕ Add LCD 1602").clicked() {
-        app.spawning = SpawningComponent::LCD1602;
-        ui.close_menu();
-    }
-    if ui.button("➕ Add SG90 Servo").clicked() {
-        app.spawning = SpawningComponent::SERVO;
-        ui.close_menu();
-    }
-    if ui.button("➕ Add DHT22 Sensor").clicked() {
-        app.spawning = SpawningComponent::DHT22;
-        ui.close_menu();
-    }
-
-    ui.separator();
 
     if ui.button("🔍 Reset Zoom (100%)").clicked() {
         app.zoom = 1.0;

@@ -1,6 +1,12 @@
 use sim_core::netlist::PinId;
 use std::fmt;
 
+/// Nominal potential of the 3V3 supply rail in volts.
+pub const RAIL_VOLTAGE_3V3: f32 = 3.3;
+
+/// Nominal potential of the 5V supply rail in volts.
+pub const RAIL_VOLTAGE_5V: f32 = 5.0;
+
 /// Identifies the specific model and architecture of a development board.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum BoardType {

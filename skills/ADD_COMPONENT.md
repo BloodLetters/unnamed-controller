@@ -47,31 +47,41 @@ Before writing code, gather complete hardware specifications from official datas
    - Draw component package, labels, active visual feedback, and pin terminals.
    - (Optional) Implement `render_<name>_context_options(ui: &mut Ui, comp: &mut MyComponent)`.
 2. (Optional) Create `crates/sim-ui/src/inspector/<name>.rs`:
-   - Implement `render_<name>_inspector_content(ui: &mut Ui, comp: &mut MyComponent, engine: &Engine, on_delete: impl FnOnce())`.
+   - Implement `render_<name>_inspector_content(ui: &mut Ui, comp: &mut MyComponent, engine: &Engine, on_delete: impl FnOnce(), on_rebuild_netlist: impl FnOnce())`.
+   - Expose the module in `crates/sim-ui/src/inspector/mod.rs`.
 
 ---
 
 ### Step 3: Register in the Unified Component Architecture (`crates/sim-ui/src/component/`)
-Thanks to the flexible component abstraction, adding a new discrete component only requires registering it in `crates/sim-ui/src/component/`:
+Thanks to the unified component abstraction, adding a new discrete component only requires registering it across three clean submodules:
 
 1. **`crates/sim-ui/src/component/instance.rs`**:
    - Add variant `ComponentInstance::<Name>(MyComponent)`.
-   - Implement delegation match arms in `name()`, `pins()`, `pin_offsets()`, `bounds()`, `draw()`, `update_electrical()`, `handle_i2c_write()`, `render_inspector()`, `render_context_menu()`, and `duplicate()`.
-2. **`crates/sim-ui/src/component/kind.rs`**:
+   - Implement delegation match arms in `name()`, `pins()`, `bounds()`, `update_electrical()`, `handle_i2c_write()`, `render_inspector()`, `render_context_menu()`, and `duplicate()`.
+2. **`crates/sim-ui/src/component/rendering.rs`**:
+   - Implement `pin_offsets()` match arm returning relative $(dx, dy)$ coordinates of each terminal pin from component center.
+   - Implement `draw()` match arm calling `draw_single_<name>()`.
+3. **`crates/sim-ui/src/component/kind.rs`**:
    - Add variant `ComponentKind::<Name>`.
    - Implement factory creation in `ComponentKind::create()`.
-3. `pins.rs`, `sim.rs`, `view.rs`, `state/spawn.rs`, `state/deletion.rs`, `state/mutation.rs`, `state/snapshot.rs`, and `registry.rs` automatically work with the new component without any changes!
+   - (Optional) Implement default rotation in `ComponentKind::default_rotation()`.
+4. `pins.rs`, `sim.rs`, `view.rs`, `state/spawn.rs`, `state/deletion.rs`, `state/mutation.rs`, `state/snapshot.rs`, and `registry.rs` automatically work with the new component without any changes!
 
 ---
 
-### Step 4: Catalog & Palette Integration
-1. **`crates/sim-ui/src/add_component/catalog.rs`**:
+### Step 4: Catalog & Spawning Integration (`crates/sim-ui/src/add_component/`)
+1. **`crates/sim-ui/src/types.rs`**:
+   - *(Optional)* Add a convenience constant to `SpawningComponent`:
+     ```rust
+     pub const <NAME>: Self = Self::Component(crate::component::ComponentKind::<Name>);
+     ```
+2. **`crates/sim-ui/src/add_component/catalog.rs`**:
    - Add catalog entry to `CATALOG_ITEMS`:
      ```rust
      ComponentItem {
          id: "<name>",
          name: "<Display Name>",
-         category: CategoryKind::<Boards|Displays|Output|Sensors>,
+         category: CategoryKind::<Boards|Displays|Output|Sensors|Passive|Input|Motors|Analog|LogicGates>,
          specs: "<Key specifications>",
          badge: Some("Ready"),
          is_pro: false,
@@ -79,7 +89,9 @@ Thanks to the flexible component abstraction, adding a new discrete component on
          spawn: SpawningComponent::Component(ComponentKind::<Name>),
      }
      ```
-2. *(Optional)* Add quick-spawn button to `PALETTE` in `crates/sim-ui/src/registry.rs`.
+3. **`crates/sim-ui/src/add_component/card.rs`**:
+   - Add visual glyph or preview shape in `draw_card_preview()`.
+4. *Placement*: The component will automatically spawn right at `app.camera_center()` when clicked in the Add Component modal.
 
 ---
 

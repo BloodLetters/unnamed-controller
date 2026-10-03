@@ -3,6 +3,7 @@
 pub mod instance;
 pub mod kind;
 pub mod placed;
+pub mod rendering;
 
 pub use instance::ComponentInstance;
 pub use kind::ComponentKind;

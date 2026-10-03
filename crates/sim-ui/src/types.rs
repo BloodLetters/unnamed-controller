@@ -34,6 +34,10 @@ impl SpawningComponent {
     pub const MQ135: Self = Self::Component(crate::component::ComponentKind::Mq135);
     /// Helper to spawn an active buzzer.
     pub const BUZZER: Self = Self::Component(crate::component::ComponentKind::Buzzer);
+    /// Helper to spawn a resistor at its default value.
+    pub const RESISTOR: Self = Self::Component(crate::component::ComponentKind::Resistor);
+    /// Helper to spawn a tactile push button switch.
+    pub const BUTTON: Self = Self::Component(crate::component::ComponentKind::Button);
 }
 
 /// Identifies the component or element currently selected for inspection or manipulation.
@@ -69,23 +73,37 @@ impl SelectedItem {
     }
 }
 
-/// Connection wire between two pins with customizable color and label.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+/// Connection wire between two pins with customizable color, label, and routing waypoints.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Wire {
     pub from: PinId,
     pub to: PinId,
     pub color: [u8; 3],
     pub label: String,
+    #[serde(default)]
+    pub waypoints: Vec<[f32; 2]>,
 }
 
 impl Wire {
-    /// Creates a new wire with default signal emerald styling.
+    /// Creates a new wire with default signal emerald styling and direct path.
     pub fn new(from: PinId, to: PinId) -> Self {
         Self {
             from,
             to,
             color: [76, 175, 80],
             label: String::new(),
+            waypoints: Vec::new(),
+        }
+    }
+
+    /// Creates a new wire with custom routing breakpoints.
+    pub fn with_waypoints(from: PinId, to: PinId, waypoints: Vec<[f32; 2]>) -> Self {
+        Self {
+            from,
+            to,
+            color: [76, 175, 80],
+            label: String::new(),
+            waypoints,
         }
     }
 }

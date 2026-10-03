@@ -102,6 +102,7 @@ pub fn restore_snapshot(app: &mut SimulatorApp, data: ProjectData) {
 
     app.selected = SelectedItem::None;
     app.drawing_wire = None;
+    app.wire_waypoints.clear();
     app.rebuild_netlist();
 }
 
