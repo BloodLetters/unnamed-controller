@@ -55,6 +55,8 @@ pub(crate) fn boot_machine(
 
     let mut machine = s3emu::soc::machine([0x44, 0x1b, 0xf6, 0x75, 0xdc, 0xe0]);
     machine.console.capture = true;
+    machine.vq_max = 256;
+    machine.bb_max = 16;
 
     for &addr in &[0x3C, 0x27, 0x3F] {
         machine.bus.periph.i2c[0].attach(

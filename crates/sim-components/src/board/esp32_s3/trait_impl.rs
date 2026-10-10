@@ -91,7 +91,7 @@ impl Board for Esp32S3DevKit {
         }
 
         if let Some(machine) = &mut self.soc_machine {
-            let cycles = ((dt_seconds as f64) * 40_000_000.0).clamp(5_000.0, 50_000.0) as u64;
+            let cycles = ((dt_seconds as f64) * 240_000_000.0).clamp(5_000.0, 300_000.0) as u64;
             machine.run(cycles);
 
             if !machine.console.uart0.is_empty() {

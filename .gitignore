@@ -1,3 +1,5 @@
 /target
 /.agents
 .env
+graphify-out
+firmware.bin

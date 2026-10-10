@@ -21,7 +21,7 @@ It integrates `sim-ui`, `sim-components`, and `sim-core` with native operating s
 
 To guarantee smooth 60 FPS responsiveness during simulation:
 1. **Delta Clamping**: Real-time delta per frame is clamped to `MAX_FRAME_SECONDS = 0.05` (50ms).
-2. **Step Budgeting**: Fixed simulation ticks are limited to `MAX_STEPS_PER_FRAME = 10` per frame.
+2. **Step Budgeting**: Fixed simulation ticks are limited to `MAX_STEPS_PER_FRAME = 25` per frame with sub-8ms budget.
 3. **Lag Discarding**: If the simulation accumulator exceeds the step budget, remaining excess time is discarded to prevent catch-up spirals of death that cause Windows "Not Responding" freezes.
 4. **Cycle Bounding**: Any hardware emulation cycles (Xtensa `s3emu`) are dynamically bounded to execute within sub-millisecond times per step.
 

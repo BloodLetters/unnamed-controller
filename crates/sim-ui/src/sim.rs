@@ -146,7 +146,8 @@ pub fn tick_simulation(app: &mut SimulatorApp) {
 }
 
 const MAX_FRAME_SECONDS: f32 = 0.05;
-const MAX_STEPS_PER_FRAME: u32 = 10;
+const MAX_STEPS_PER_FRAME: u32 = 25;
+const MAX_SIMULATION_BUDGET_MS: u128 = 8;
 
 /// Advances the deterministic simulation by whole fixed steps based on elapsed frame time.
 pub fn advance_simulation(app: &mut SimulatorApp, ctx: &egui::Context) {
@@ -155,6 +156,7 @@ pub fn advance_simulation(app: &mut SimulatorApp, ctx: &egui::Context) {
         return;
     }
 
+    let frame_start = std::time::Instant::now();
     let step = SIMULATION_TICK_SECONDS as f64;
     let elapsed = ctx.input(|input| input.stable_dt).min(MAX_FRAME_SECONDS) as f64;
     app.time_accumulator += elapsed;
@@ -165,9 +167,13 @@ pub fn advance_simulation(app: &mut SimulatorApp, ctx: &egui::Context) {
         app.time_accumulator -= step;
         app.simulated_seconds += step;
         steps += 1;
+
+        if frame_start.elapsed().as_millis() >= MAX_SIMULATION_BUDGET_MS {
+            break;
+        }
     }
 
-    if app.time_accumulator >= step {
-        app.time_accumulator = 0.0;
+    if app.time_accumulator > step * 30.0 {
+        app.time_accumulator = step * 30.0;
     }
 }
